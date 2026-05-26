@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Read articles about web development, accessibility, SEO, and modern web standards.">
+  <meta name="keywords" content="blog, articles, web development, accessibility, WCAG, HTML5, SEO">
+  <meta property="og:title" content="Blog - Web Development & Accessibility">
+  <meta property="og:description" content="Articles on web development, accessibility, and web standards">
+  <meta property="og:type" content="website">
+  <title>Blog - Web Development & Accessibility</title>
+  <link rel="canonical" href="https://yourportfolio.com/blog.html">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>💼</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Skip to main content link for keyboard navigation -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header with Navigation -->
+  <header role="banner">
+    <div class="header-container">
+      <div class="logo-section">
+        <a href="index.html" class="logo" aria-label="Portfolio Home">
+          <span aria-hidden="true">💼</span>
+          <span class="logo-text">Portfolio</span>
+        </a>
+      </div>
+      
+      <nav role="navigation" aria-label="Main Navigation">
+        <button class="menu-toggle" aria-expanded="false" aria-label="Toggle navigation menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <ul class="nav-menu" id="nav-menu">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="blog.html" aria-current="page">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="accessibility-controls" role="region" aria-label="Accessibility Options">
+        <button id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <span aria-hidden="true">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" role="main">
+    <!-- Page Header -->
+    <section class="page-header" aria-label="Page Title">
+      <h1>Blog</h1>
+      <p>Articles on web development, accessibility, and modern web standards</p>
+    </section>
+
+    <!-- Blog Articles Grid -->
+    <section class="blog-grid" aria-label="Blog Articles">
+      <!-- Article 1 -->
+      <article class="blog-post" id="post-1">
+        <header>
+          <h2><a href="#article-1">Semantic HTML5: The Foundation of Accessible Websites</a></h2>
+          <div class="article-meta">
+            <span class="author" aria-label="Author">By Your Name</span>
+            <time datetime="2024-03-15" aria-label="Published date">March 15, 2024</time>
+            <span class="read-time" aria-label="Reading time">8 min read</span>
+          </div>
+        </header>
+        
+        <p class="article-excerpt">
+          Learn why semantic HTML5 is the cornerstone of modern web development. 
+          We explore the importance of proper markup, accessibility benefits, and SEO implications.
+        </p>
+
+        <div class="article-tags">
+          <span class="tag-label">Topics:</span>
+          <ul role="list">
+            <li><a href="#" class="article-tag">HTML5</a></li>
+            <li><a href="#" class="article-tag">Semantics</a></li>
+            <li><a href="#" class="article-tag">Web Standards</a></li>
+          </ul>
+        </div>
+
+        <a href="#article-1" class="read-more">Read Full Article</a>
+      </article>
+
+      <!-- Article 2 -->
+      <article class="blog-post" id="post-2">
+        <header>
+          <h2><a href="#article-2">WCAG 2.1 Accessibility Standards: A Comprehensive Guide</a></h2>
+          <div class="article-meta">
+            <span class="author" aria-label="Author">By Your Name</span>
+            <time datetime="2024-03-10" aria-label="Published date">March 10, 2024</time>
+            <span class="read-time" aria-label="Reading time">12 min read</span>
+          </div>
+        </header>
+        
+        <p class="article-excerpt">
+          A deep dive into WCAG 2.1 standards. Understand the four principles (POUR) and how to 
+          implement accessibility guidelines at every level (A, AA, AAA).
+        </p>
+
+        <div class="article-tags">
+          <span class="tag-label">Topics:</span>
+          <ul role="list">
+            <li><a href="#" class="article-tag">Accessibility</a></li>
+            <li><a href="#" class="article-tag">WCAG</a></li>
+            <li><a href="#" class="article-tag">Compliance</a></li>
+          </ul>
+        </div>
+
+        <a href="#article-2" class="read-more">Read Full Article</a>
+      </article>
+
+      <!-- Article 3 -->
+      <article class="blog-post" id="post-3">
+        <header>
+          <h2><a href="#article-3">ARIA Labels & Roles: Enhancing Semantic Markup</a></h2>
+          <div class="article-meta">
+            <span class="author" aria-label="Author">By Your Name</span>
+            <time datetime="2024-03-05" aria-label="Published date">March 5, 2024</time>
+            <span class="read-time" aria-label="Reading time">10 min read</span>
+          </div>
+        </header>
+        
+        <p class="article-excerpt">
+          Discover how ARIA labels and roles can enhance semantic HTML and improve screen reader 
+          support for complex components and interactive elements.
+        </p>
+
+        <div class="article-tags">
+          <span class="tag-label">Topics:</span>
+          <ul role="list">
+            <li><a href="#" class="article-tag">ARIA</a></li>
+            <li><a href="#" class="article-tag">Screen Readers</a></li>
+            <li><a href="#" class="article-tag">Accessibility</a></li>
+          </ul>
+        </div>
+
+        <a href="#article-3" class="read-more">Read Full Article</a>
+      </article>
+
+      <!-- Article 4 -->
+      <article class="blog-post" id="post-4">
+        <header>
+          <h2><a href="#article-4">SEO Best Practices: Meta Tags, Schema, and Structured Data</a></h2>
+          <div class="article-meta">
+            <span class="author" aria-label="Author">By Your Name</span>
+            <time datetime="2024-02-28" aria-label="Published date">February 28, 2024</time>
+            <span class="read-time" aria-label="Reading time">9 min read</span>
+          </div>
+        </header>
+        
+        <p class="article-excerpt">
+          Master SEO optimization through proper meta tags, schema.org markup, and structured data. 
+          Learn how semantic HTML improves search engine visibility and ranking.
+        </p>
+
+        <div class="article-tags">
+          <span class="tag-label">Topics:</span>
+          <ul role="list">
+            <li><a href="#" class="article-tag">SEO</a></li>
+            <li><a href="#" class="article-tag">Schema Markup</a></li>
+            <li><a href="#" class="article-tag">Meta Tags</a></li>
+          </ul>
+        </div>
+
+        <a href="#article-4" class="read-more">Read Full Article</a>
+      </article>
+
+      <!-- Article 5 -->
+      <article class="blog-post" id="post-5">
+        <header>
+          <h2><a href="#article-5">Building Accessible Forms: Best Practices & Common Pitfalls</a></h2>
+          <div class="article-meta">
+            <span class="author" aria-label="Author">By Your Name</span>
+            <time datetime="2024-02-20" aria-label="Published date">February 20, 2024</time>
+            <span class="read-time" aria-label="Reading time">11 min read</span>
+          </div>
+        </header>
+        
+        <p class="article-excerpt">
+          Explore how to build accessible HTML forms with proper labels, error messages, and validation. 
+          Learn common pitfalls and how to avoid them.
+        </p>
+
+        <div class="article-tags">
+          <span class="tag-label">Topics:</span>
+          <ul role="list">
+            <li><a href="#" class="article-tag">Forms</a></li>
+            <li><a href="#" class="article-tag">Accessibility</a></li>
+            <li><a href="#" class="article-tag">UX</a></li>
+          </ul>
+        </div>
+
+        <a href="#article-5" class="read-more">Read Full Article</a>
+      </article>
+
+      <!-- Article 6 -->
+      <article class="blog-post" id="post-6">
+        <header>
+          <h2><a href="#article-6">Keyboard Navigation and Focus Management in Web Apps</a></h2>
+          <div class="article-meta">
+            <span class="author" aria-label="Author">By Your Name</span>
+            <time datetime="2024-02-15" aria-label="Published date">February 15, 2024</time>
+            <span class="read-time" aria-label="Reading time">10 min read</span>
+          </div>
+        </header>
+        
+        <p class="article-excerpt">
+          Learn how to implement keyboard navigation and proper focus management in modern web applications. 
+          Ensure your site is usable by keyboard-only users.
+        </p>
+
+        <div class="article-tags">
+          <span class="tag-label">Topics:</span>
+          <ul role="list">
+            <li><a href="#" class="article-tag">Keyboard Navigation</a></li>
+            <li><a href="#" class="article-tag">Focus Management</a></li>
+            <li><a href="#" class="article-tag">Accessibility</a></li>
+          </ul>
+        </div>
+
+        <a href="#article-6" class="read-more">Read Full Article</a>
+      </article>
+    </section>
+
+    <!-- Newsletter Signup -->
+    <section class="newsletter-signup" aria-label="Newsletter Subscription">
+      <h2>Subscribe to Updates</h2>
+      <p>Get notified when new articles about web development and accessibility are published.</p>
+      
+      <form method="POST" action="#newsletter" novalidate>
+        <div class="form-group">
+          <label for="email">Email Address <span aria-label="required">*</span></label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            aria-required="true"
+            placeholder="your@email.com"
+          >
+          <small id="email-help">We respect your privacy. Unsubscribe anytime.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="interests">Interests <span aria-label="required">*</span></label>
+          <fieldset>
+            <legend class="sr-only">Select your interests</legend>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" name="interests" value="accessibility">
+                Accessibility
+              </label>
+              <label>
+                <input type="checkbox" name="interests" value="seo">
+                SEO & Performance
+              </label>
+              <label>
+                <input type="checkbox" name="interests" value="webdev">
+                Web Development
+              </label>
+            </div>
+          </fieldset>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Aside: Blog Categories -->
+  <aside role="complementary" aria-label="Blog Categories and Archives">
+    <section class="sidebar-section">
+      <h2>Categories</h2>
+      <nav aria-label="Blog Categories">
+        <ul role="list">
+          <li><a href="#category-accessibility">Accessibility (18)</a></li>
+          <li><a href="#category-web-dev">Web Development (24)</a></li>
+          <li><a href="#category-seo">SEO & Performance (15)</a></li>
+          <li><a href="#category-tutorials">Tutorials (12)</a></li>
+        </ul>
+      </nav>
+    </section>
+
+    <section class="sidebar-section">
+      <h2>Recent Posts</h2>
+      <ul role="list">
+        <li><a href="#post-1">Semantic HTML5 Foundations</a></li>
+        <li><a href="#post-2">WCAG 2.1 Guide</a></li>
+        <li><a href="#post-3">ARIA Labels & Roles</a></li>
+      </ul>
+    </section>
+  </aside>
+
+  <!-- Footer -->
+  <footer role="contentinfo" aria-label="Site Footer">
+    <div class="footer-content">
+      <section class="footer-section">
+        <h3>Quick Links</h3>
+        <nav aria-label="Footer Navigation">
+          <ul role="list">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </nav>
+      </section>
+
+      <section class="footer-section">
+        <h3>Follow Me</h3>
+        <nav aria-label="Social Media Links">
+          <ul role="list" class="social-links">
+            <li><a href="https://linkedin.com" aria-label="Visit LinkedIn profile">LinkedIn</a></li>
+            <li><a href="https://github.com" aria-label="Visit GitHub profile">GitHub</a></li>
+            <li><a href="https://twitter.com" aria-label="Visit Twitter profile">Twitter</a></li>
+          </ul>
+        </nav>
+      </section>
+
+      <section class="footer-section">
+        <h3>Contact</h3>
+        <address>
+          <p>Email: <a href="mailto:hello@example.com">hello@example.com</a></p>
+          <p>Phone: <a href="tel:+1234567890">+1 (234) 567-8900</a></p>
+        </address>
+      </section>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2024 Your Name. All rights reserved.</p>
+      <p>
+        <a href="#accessibility">Accessibility Statement</a> | 
+        <a href="#privacy">Privacy Policy</a> | 
+        <a href="#terms">Terms of Service</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/script.js" defer></script>
+</body>
+</html>
