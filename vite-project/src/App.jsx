@@ -1,320 +1,303 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 
-const STORAGE_KEY = 'thiranex.todo.tasks.v1'
-const FILTERS = ['all', 'active', 'completed']
+const DEFAULT_CITY = 'London'
+const GEOCODE_ENDPOINT = 'https://geocoding-api.open-meteo.com/v1/search'
+const WEATHER_ENDPOINT = 'https://api.open-meteo.com/v1/forecast'
 
-function safeLoadTasks() {
-  if (typeof window === 'undefined') {
-    return []
+function toSentence(text) {
+  if (!text) {
+    return 'Unknown'
   }
 
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
+  return text.replaceAll('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase())
+}
 
-    if (!stored) {
-      return []
-    }
+function getWeatherCodeDetails(code) {
+  const map = {
+    0: { label: 'Clear sky', icon: 'sun' },
+    1: { label: 'Mainly clear', icon: 'sun-cloud' },
+    2: { label: 'Partly cloudy', icon: 'cloud-sun' },
+    3: { label: 'Overcast', icon: 'cloud' },
+    45: { label: 'Fog', icon: 'fog' },
+    48: { label: 'Depositing rime fog', icon: 'fog' },
+    51: { label: 'Light drizzle', icon: 'rain' },
+    53: { label: 'Moderate drizzle', icon: 'rain' },
+    55: { label: 'Dense drizzle', icon: 'rain' },
+    56: { label: 'Freezing drizzle', icon: 'sleet' },
+    57: { label: 'Freezing drizzle', icon: 'sleet' },
+    61: { label: 'Slight rain', icon: 'rain' },
+    63: { label: 'Moderate rain', icon: 'rain' },
+    65: { label: 'Heavy rain', icon: 'rain' },
+    66: { label: 'Freezing rain', icon: 'sleet' },
+    67: { label: 'Freezing rain', icon: 'sleet' },
+    71: { label: 'Slight snow', icon: 'snow' },
+    73: { label: 'Moderate snow', icon: 'snow' },
+    75: { label: 'Heavy snow', icon: 'snow' },
+    77: { label: 'Snow grains', icon: 'snow' },
+    80: { label: 'Rain showers', icon: 'rain' },
+    81: { label: 'Rain showers', icon: 'rain' },
+    82: { label: 'Violent rain showers', icon: 'rain' },
+    85: { label: 'Snow showers', icon: 'snow' },
+    86: { label: 'Snow showers', icon: 'snow' },
+    95: { label: 'Thunderstorm', icon: 'storm' },
+    96: { label: 'Thunderstorm with hail', icon: 'storm' },
+    99: { label: 'Thunderstorm with hail', icon: 'storm' },
+  }
 
-    const parsed = JSON.parse(stored)
+  return map[code] || { label: 'Unknown conditions', icon: 'cloud' }
+}
 
-    if (!Array.isArray(parsed)) {
-      return []
-    }
+function getWeatherIcon(icon) {
+  switch (icon) {
+    case 'sun':
+      return '☀'
+    case 'sun-cloud':
+      return '⛅'
+    case 'cloud-sun':
+      return '🌤'
+    case 'fog':
+      return '🌫'
+    case 'rain':
+      return '🌧'
+    case 'sleet':
+      return '🌨'
+    case 'snow':
+      return '❄'
+    case 'storm':
+      return '⛈'
+    default:
+      return '☁'
+  }
+}
 
-    return parsed
-      .filter((task) => task && typeof task.title === 'string')
-      .map((task) => ({
-        id: typeof task.id === 'string' ? task.id : crypto.randomUUID(),
-        title: task.title,
-        completed: Boolean(task.completed),
-      }))
-  } catch {
-    return []
+async function fetchCityWeather(cityName, signal) {
+  const searchResponse = await fetch(
+    `${GEOCODE_ENDPOINT}?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`,
+    { signal },
+  )
+
+  if (!searchResponse.ok) {
+    throw new Error('Unable to find that city right now.')
+  }
+
+  const searchData = await searchResponse.json()
+
+  if (!searchData?.results?.length) {
+    throw new Error('No weather location matched that city name.')
+  }
+
+  const location = searchData.results[0]
+  const weatherResponse = await fetch(
+    `${WEATHER_ENDPOINT}?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto`,
+    { signal },
+  )
+
+  if (!weatherResponse.ok) {
+    throw new Error('Weather service returned an unexpected response.')
+  }
+
+  const weatherData = await weatherResponse.json()
+  const current = weatherData?.current
+  const hourly = weatherData?.hourly ?? {}
+  const currentIndex = Array.isArray(hourly.time)
+    ? hourly.time.findIndex((time) => time === current?.time)
+    : -1
+
+  return {
+    location,
+    current,
+    hourly,
+    currentIndex,
+    raw: weatherData,
   }
 }
 
 function App() {
-  const [tasks, setTasks] = useState(safeLoadTasks)
-  const [taskInput, setTaskInput] = useState('')
-  const [filter, setFilter] = useState('all')
-  const [editingId, setEditingId] = useState(null)
-  const [editingTitle, setEditingTitle] = useState('')
+  const [query, setQuery] = useState(DEFAULT_CITY)
+  const [searchInput, setSearchInput] = useState(DEFAULT_CITY)
+  const [weather, setWeather] = useState(null)
+  const [status, setStatus] = useState('idle')
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
-  }, [tasks])
+    const controller = new AbortController()
 
-  const visibleTasks = useMemo(() => {
-    if (filter === 'active') {
-      return tasks.filter((task) => !task.completed)
+    async function loadWeather() {
+      setStatus('loading')
+      setError('')
+
+      try {
+        const result = await fetchCityWeather(query, controller.signal)
+        setWeather(result)
+        setStatus('success')
+      } catch (fetchError) {
+        if (fetchError.name === 'AbortError') {
+          return
+        }
+
+        setWeather(null)
+        setError(fetchError instanceof Error ? fetchError.message : 'Failed to load weather data.')
+        setStatus('error')
+      }
     }
 
-    if (filter === 'completed') {
-      return tasks.filter((task) => task.completed)
-    }
+    loadWeather()
 
-    return tasks
-  }, [filter, tasks])
+    return () => controller.abort()
+  }, [query])
 
-  const activeCount = tasks.filter((task) => !task.completed).length
-  const completedCount = tasks.length - activeCount
-
-  function addTask(event) {
+  function handleSearch(event) {
     event.preventDefault()
 
-    const title = taskInput.trim()
+    const nextQuery = searchInput.trim()
 
-    if (!title) {
+    if (!nextQuery) {
       return
     }
 
-    const newTask = {
-      id: crypto.randomUUID(),
-      title,
-      completed: false,
-    }
-
-    setTasks((currentTasks) => [newTask, ...currentTasks])
-    setTaskInput('')
+    setQuery(nextQuery)
   }
 
-  function startEditing(task) {
-    setEditingId(task.id)
-    setEditingTitle(task.title)
-  }
-
-  function saveTask(taskId) {
-    const nextTitle = editingTitle.trim()
-
-    if (!nextTitle) {
-      return
-    }
-
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId ? { ...task, title: nextTitle } : task,
-      ),
-    )
-    setEditingId(null)
-    setEditingTitle('')
-  }
-
-  function cancelEditing() {
-    setEditingId(null)
-    setEditingTitle('')
-  }
-
-  function handleTaskListClick(event) {
-    const actionButton = event.target.closest('button[data-action]')
-
-    if (!actionButton) {
-      return
-    }
-
-    const { action, id } = actionButton.dataset
-
-    if (action === 'toggle') {
-      setTasks((currentTasks) =>
-        currentTasks.map((task) =>
-          task.id === id ? { ...task, completed: !task.completed } : task,
-        ),
-      )
-      return
-    }
-
-    if (action === 'edit') {
-      const task = tasks.find((item) => item.id === id)
-
-      if (task) {
-        startEditing(task)
-      }
-      return
-    }
-
-    if (action === 'delete') {
-      setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id))
-      if (editingId === id) {
-        cancelEditing()
-      }
-      return
-    }
-
-    if (action === 'cancel') {
-      cancelEditing()
-    }
-  }
-
-  function clearCompleted() {
-    setTasks((currentTasks) => currentTasks.filter((task) => !task.completed))
-    if (editingId && tasks.some((task) => task.id === editingId && task.completed)) {
-      cancelEditing()
-    }
-  }
+  const currentWeather = weather?.current
+  const weatherCode = currentWeather?.weather_code ?? 3
+  const weatherDetails = getWeatherCodeDetails(weatherCode)
+  const hourly = weather?.hourly ?? {}
+  const currentIndex = weather?.currentIndex ?? -1
+  const nextHours = Array.isArray(hourly.time)
+    ? hourly.time.slice(Math.max(currentIndex, 0), Math.max(currentIndex, 0) + 6).map((time, index) => ({
+        time,
+        temperature: hourly.temperature_2m?.[Math.max(currentIndex, 0) + index],
+        humidity: hourly.relative_humidity_2m?.[Math.max(currentIndex, 0) + index],
+        wind: hourly.wind_speed_10m?.[Math.max(currentIndex, 0) + index],
+        code: hourly.weather_code?.[Math.max(currentIndex, 0) + index],
+      }))
+    : []
 
   return (
-    <main className="todo-app">
+    <main className="weather-app">
       <section className="hero-panel">
         <div className="hero-copy">
-          <p className="eyebrow">Task studio</p>
-          <h1>Build a quieter workflow.</h1>
+          <p className="eyebrow">Weather dashboard</p>
+          <h1>Live conditions by city.</h1>
           <p className="lede">
-            Capture tasks, edit them in place, filter your focus, and keep the
-            list automatically saved in local storage.
+            Search any city, fetch live weather through async JavaScript, and inspect the
+            nested JSON response behind the metrics.
           </p>
         </div>
 
-        <div className="hero-stats" aria-label="Task summary">
-          <div>
-            <span>{tasks.length}</span>
-            <p>Total</p>
-          </div>
-          <div>
-            <span>{activeCount}</span>
-            <p>Active</p>
-          </div>
-          <div>
-            <span>{completedCount}</span>
-            <p>Done</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="task-panel">
-        <form className="task-form" onSubmit={addTask}>
-          <label className="sr-only" htmlFor="task-input">
-            Add a new task
+        <form className="search-card" onSubmit={handleSearch}>
+          <label className="sr-only" htmlFor="city-search">
+            Search weather by city name
           </label>
           <input
-            id="task-input"
+            id="city-search"
             type="text"
-            value={taskInput}
-            onChange={(event) => setTaskInput(event.target.value)}
-            placeholder="Add a new task and press Enter"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search city, e.g. Nairobi"
             autoComplete="off"
-            maxLength={120}
+            maxLength={80}
           />
-          <button type="submit">Add task</button>
+          <button type="submit">Search</button>
         </form>
+      </section>
 
-        <div className="toolbar">
-          <div className="filters" role="tablist" aria-label="Task filters">
-            {FILTERS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={option === filter ? 'filter-chip active' : 'filter-chip'}
-                onClick={() => setFilter(option)}
-                role="tab"
-                aria-selected={option === filter}
-              >
-                {option[0].toUpperCase() + option.slice(1)}
-              </button>
-            ))}
+      <section className="content-grid">
+        <article className="weather-card spotlight">
+          <div className="spotlight-head">
+            <div>
+              <p className="card-label">Current location</p>
+              <h2>{weather?.location ? `${weather.location.name}, ${weather.location.country}` : query}</h2>
+            </div>
+            <span className="weather-icon" aria-hidden="true">
+              {getWeatherIcon(weatherDetails.icon)}
+            </span>
           </div>
 
-          <button
-            type="button"
-            className="ghost-button"
-            onClick={clearCompleted}
-            disabled={completedCount === 0}
-          >
-            Clear completed
-          </button>
-        </div>
+          {status === 'loading' ? (
+            <p className="status-message">Loading live weather data...</p>
+          ) : error ? (
+            <p className="status-message error" role="alert">
+              {error}
+            </p>
+          ) : null}
 
-        <ul className="task-list" onClick={handleTaskListClick}>
-          {visibleTasks.length === 0 ? (
-            <li className="empty-state">
-              <h2>No tasks found</h2>
-              <p>
-                {filter === 'all'
-                  ? 'Add your first task to begin.'
-                  : 'Try a different filter or add more tasks.'}
-              </p>
-            </li>
-          ) : (
-            visibleTasks.map((task) => {
-              const isEditing = task.id === editingId
+          {currentWeather ? (
+            <div className="current-summary">
+              <div className="temperature-block">
+                <span className="temperature">{Math.round(currentWeather.temperature_2m)}°</span>
+                <p>{weatherDetails.label}</p>
+              </div>
 
-              return (
-                <li
-                  key={task.id}
-                  className={task.completed ? 'task-item completed' : 'task-item'}
-                >
-                  <button
-                    type="button"
-                    className="task-toggle"
-                    data-action="toggle"
-                    data-id={task.id}
-                    aria-pressed={task.completed}
-                    aria-label={task.completed ? 'Mark task as active' : 'Mark task as completed'}
-                  >
-                    <span />
-                  </button>
+              <dl className="metrics-grid">
+                <div>
+                  <dt>Humidity</dt>
+                  <dd>{currentWeather.relative_humidity_2m}%</dd>
+                </div>
+                <div>
+                  <dt>Wind speed</dt>
+                  <dd>{Math.round(currentWeather.wind_speed_10m)} km/h</dd>
+                </div>
+                <div>
+                  <dt>Coordinates</dt>
+                  <dd>
+                    {weather?.location?.latitude?.toFixed(2)}, {weather?.location?.longitude?.toFixed(2)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Timezone</dt>
+                  <dd>{toSentence(weather?.raw?.timezone)}</dd>
+                </div>
+              </dl>
+            </div>
+          ) : null}
+        </article>
 
-                  {isEditing ? (
-                    <form
-                      className="edit-form"
-                      onSubmit={(event) => {
-                        event.preventDefault()
-                        saveTask(task.id)
-                      }}
-                    >
-                      <input
-                        type="text"
-                        value={editingTitle}
-                        onChange={(event) => setEditingTitle(event.target.value)}
-                        autoFocus
-                        maxLength={120}
-                        aria-label="Edit task title"
-                      />
-                      <button type="submit" className="primary-action">
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        className="ghost-button"
-                        data-action="cancel"
-                        data-id={task.id}
-                      >
-                        Cancel
-                      </button>
-                    </form>
-                  ) : (
-                    <>
-                      <div className="task-content">
-                        <span className="task-title">{task.title}</span>
-                        <span className="task-meta">
-                          {task.completed ? 'Completed' : 'In progress'}
-                        </span>
-                      </div>
+        <article className="weather-card details-card">
+          <div className="card-header">
+            <div>
+              <p className="card-label">Nested JSON snapshot</p>
+              <h2>Forecast window</h2>
+            </div>
+            <span className={status === 'success' ? 'pill success' : 'pill'}>{status}</span>
+          </div>
 
-                      <div className="task-actions">
-                        <button
-                          type="button"
-                          className="ghost-button"
-                          data-action="edit"
-                          data-id={task.id}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="danger-button"
-                          data-action="delete"
-                          data-id={task.id}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </li>
-              )
-            })
-          )}
-        </ul>
+          <div className="forecast-list">
+            {nextHours.length > 0 ? (
+              nextHours.map((entry) => {
+                const hour = new Date(entry.time).toLocaleTimeString([], {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+
+                const codeDetails = getWeatherCodeDetails(entry.code)
+
+                return (
+                  <div key={entry.time} className="forecast-row">
+                    <div>
+                      <strong>{hour}</strong>
+                      <p>{codeDetails.label}</p>
+                    </div>
+                    <div>
+                      <span>{Math.round(entry.temperature)}°</span>
+                      <small>{Math.round(entry.wind)} km/h wind</small>
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="forecast-empty">
+                <p>Search a city to inspect the next hours of live forecast data.</p>
+              </div>
+            )}
+          </div>
+
+          <details className="json-panel">
+            <summary>View raw JSON structure</summary>
+            <pre>{JSON.stringify(weather?.raw, null, 2)}</pre>
+          </details>
+        </article>
       </section>
     </main>
   )
